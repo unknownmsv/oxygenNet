@@ -34,7 +34,8 @@ V2RAY_OUTPUT_FILE = OUTPUT_DIR / "v2ray" / "v2ray_subscription.txt"
 WIREGUARD_OUTPUT_DIR = OUTPUT_DIR / "wireguard"
 
 # --- عبارات باقاعده (Regex) ---
-V2RAY_REGEX = r'(vmess|vless|trojan)://[^\s`"<]+'
+# FIX: Using a non-capturing group (?:...) to ensure findall returns the entire match.
+V2RAY_REGEX = r'(?:vmess|vless|trojan)://[^\s`"<]+'
 WIREGUARD_BLOCK_REGEX = r'(\[Interface\][\s\S]*?\[Peer\][\s\S]*?Endpoint\s*=\s*.*)'
 WIREGUARD_LINK_REGEX = r'wireguard://[^\s`"<]+'
 
