@@ -4,8 +4,7 @@ import logging
 import subprocess
 import sys
 import atexit
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pytz import timezone
+
 # وارد کردن ماژول ماینر
 from configs import miner
 
@@ -55,21 +54,19 @@ async def main():
     # ۱. راه‌اندازی سرور سابسکریپشن در پس‌زمینه
     start_subscription_server()
     
-    # ۲. اجرای اولیه ماینر برای دریافت داده‌های اولیه
-    await hourly_update_task()
-
-    # ۳. تنظیم زمان‌بندی برای اجرای ساعتی ماینر
-    scheduler = AsyncIOScheduler(timezone=timezone('Asia/Tehran'))
-    scheduler.add_job(hourly_update_task, 'interval', hours=1)
-    scheduler.start()
-    logger.info("زمان‌بند (Scheduler) برای به‌روزرسانی ساعتی فعال شد.")
-    
-    # برنامه اصلی را در حال اجرا نگه می‌دارد
+    # ۲. حلقه اصلی برای اجرای ساعتی وظیفه
     try:
         while True:
-            await asyncio.sleep(3600)
+            # اجرای وظیفه به‌روزرسانی
+            await hourly_update_task()
+            
+            # انتظار برای یک ساعت
+            update_interval_seconds = 3600
+            logger.info(f"اجرای بعدی تا {int(update_interval_seconds / 60)} دقیقه دیگر...")
+            await asyncio.sleep(update_interval_seconds)
+
     except (KeyboardInterrupt, SystemExit):
-        logger.info("درخواست خروج دریافت شد.")
+        logger.info("درخواست خروج دریافت شد. برنامه در حال خاموش شدن است.")
 
 if __name__ == "__main__":
     try:
