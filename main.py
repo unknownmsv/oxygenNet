@@ -5,9 +5,9 @@ import subprocess
 import sys
 import atexit
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
+from pytz import timezone
 # وارد کردن ماژول ماینر
-import configs.miner
+from configs import miner
 
 # --- تنظیمات اولیه ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -59,7 +59,7 @@ async def main():
     await hourly_update_task()
 
     # ۳. تنظیم زمان‌بندی برای اجرای ساعتی ماینر
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=timezone('Asia/Tehran'))
     scheduler.add_job(hourly_update_task, 'interval', hours=1)
     scheduler.start()
     logger.info("زمان‌بند (Scheduler) برای به‌روزرسانی ساعتی فعال شد.")
