@@ -41,7 +41,7 @@ docker-compose up --build
 
 ### **نصب دستی**  
 ```bash
-git clone https://github.com/your-repo/OxygenNet.git
+git clone https://github.com/unknownmsv/OxygenNet.git
 cd OxygenNet
 pip install -r requirements.txt
 python main.py
