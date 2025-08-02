@@ -2,3 +2,4 @@
 /configs/.env
 /configs/wireguard/.
 telegram_session.session
+/configs/__pycache__

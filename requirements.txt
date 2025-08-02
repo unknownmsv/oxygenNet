@@ -1,0 +1,9 @@
+flask
+watchdog
+pathlib
+logging
+base64
+json
+sys
+dotenv
+telethon

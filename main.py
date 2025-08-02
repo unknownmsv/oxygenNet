@@ -4,74 +4,72 @@ import logging
 import subprocess
 import sys
 import atexit
-
-# وارد کردن ماژول ماینر
 from configs import miner
 
-# --- تنظیمات اولیه ---
+# --- Initial Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# متغیری برای نگهداری فرآیند سرور سابسکریپشن
+# Variable to hold the subscription server process
 sub_api_process = None
 
 def start_subscription_server():
-    """فایل sub_api.py را به عنوان یک فرآیند جداگانه اجرا می‌کند."""
+    """Runs sub_api.py as a separate process."""
     global sub_api_process
-    logger.info("در حال راه‌اندازی سرور سابسکریپشن...")
+    logger.info("Starting subscription server...")
     try:
-        # اجرای sub_api.py با استفاده از همان مفسر پایتونی که main.py را اجرا کرده
+        # Run sub_api.py using the same Python interpreter that executed main.py
         sub_api_process = subprocess.Popen([sys.executable, 'sub_api.py'])
-        logger.info(f"✅ سرور سابسکریپشن با موفقیت با PID: {sub_api_process.pid} اجرا شد.")
+        logger.info(f"✅ Subscription server started successfully with PID: {sub_api_process.pid}")
     except FileNotFoundError:
-        logger.error("خطا: فایل sub_api.py یافت نشد. لطفاً از وجود فایل در مسیر درست اطمینان حاصل کنید.")
+        logger.error("Error: sub_api.py file not found. Please ensure the file exists in the correct path.")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"خطا در اجرای sub_api.py: {e}")
+        logger.error(f"Error running sub_api.py: {e}")
         sys.exit(1)
 
 def cleanup():
-    """تابع پاکسازی که هنگام خروج از برنامه اجرا می‌شود."""
-    logger.info("در حال متوقف کردن فرآیندهای پس‌زمینه...")
+    """Cleanup function that runs when exiting the program."""
+    logger.info("Stopping background processes...")
     if sub_api_process:
         sub_api_process.terminate()
         sub_api_process.wait()
-        logger.info("سرور سابسکریپشن متوقف شد.")
+        logger.info("Subscription server stopped.")
 
 async def hourly_update_task():
-    """وظیفه اصلی که به صورت ساعتی اجرا می‌شود."""
-    logger.info("--- شروع وظیفه به‌روزرسانی ساعتی کانفیگ‌ها ---")
+    """Main task that runs hourly."""
+    logger.info("--- Starting hourly config update task ---")
     try:
         await miner.main()
     except Exception as e:
-        logger.error(f"خطا در اجرای ماینر: {e}")
-    logger.info("--- وظیفه به‌روزرسانی ساعتی به پایان رسید ---")
+        logger.error(f"Error in miner execution: {e}")
+    logger.info("--- Hourly update task completed ---")
 
 async def main():
-    # ثبت تابع cleanup برای اجرا شدن هنگام خروج
+    # Register cleanup function to run on exit
     atexit.register(cleanup)
 
-    # ۱. راه‌اندازی سرور سابسکریپشن در پس‌زمینه
+    # 1. Start subscription server in background
     start_subscription_server()
     
-    # ۲. حلقه اصلی برای اجرای ساعتی وظیفه
+    # 2. Main loop for hourly task execution
     try:
         while True:
-            # اجرای وظیفه به‌روزرسانی
+            # Execute update task
             await hourly_update_task()
             
-            # انتظار برای یک ساعت
+            # Wait for one hour
             update_interval_seconds = 3600
-            logger.info(f"اجرای بعدی تا {int(update_interval_seconds / 60)} دقیقه دیگر...")
+            logger.info(f"Next execution in {int(update_interval_seconds / 60)} minutes...")
             await asyncio.sleep(update_interval_seconds)
 
     except (KeyboardInterrupt, SystemExit):
-        logger.info("درخواست خروج دریافت شد. برنامه در حال خاموش شدن است.")
+        logger.info("Exit request received. Shutting down...")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        logger.error(f"یک خطای پیش‌بینی نشده در برنامه اصلی رخ داد: {e}")
+        logger.error(f"An unexpected error occurred in main program: {e}")
     finally:
-        logger.info("برنامه OxygenNet به پایان رسید.")
+        logger.info("OxygenNet program terminated.")
